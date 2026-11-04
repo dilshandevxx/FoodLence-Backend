@@ -60,3 +60,9 @@ ml/data/annotated/*
 ml/data/test/*
 !ml/data/test/.gitkeep
 *.log
+
+# Private Workflow & Progress Tracking (DO NOT COMMIT OR PUSH)
+*DILSHAN_PROGRESS*
+*progress*.md
+.agents/
+GEMINI.md
