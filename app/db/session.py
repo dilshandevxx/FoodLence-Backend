@@ -2,7 +2,9 @@ import logging
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import StaticPool
 from app.core.config import settings
+from app.db.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,7 @@ try:
         pool_pre_ping=settings.DB_POOL_PRE_PING,
         pool_recycle=settings.DB_POOL_RECYCLE,
         echo=settings.DEBUG,
+        connect_args={"connect_timeout": 3},
     )
 except Exception as exc:
     logger.warning(
@@ -26,6 +29,7 @@ except Exception as exc:
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 SessionLocal = sessionmaker(

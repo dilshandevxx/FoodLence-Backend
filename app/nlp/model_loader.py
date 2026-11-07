@@ -48,10 +48,14 @@ class ModelRegistry:
         if not models_dir.exists():
             return
 
+        joblib_files = list(models_dir.glob("*.joblib"))
+        if not joblib_files:
+            return
+
         try:
             import joblib
 
-            for model_file in models_dir.glob("*.joblib"):
+            for model_file in joblib_files:
                 try:
                     model_name = model_file.stem
                     self._models[model_name] = joblib.load(model_file)
