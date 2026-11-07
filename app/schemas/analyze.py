@@ -10,6 +10,8 @@ class AnalyzeRequest(BaseModel):
     raw_text: Optional[str] = Field(None, description="Raw unnormalized OCR text")
     isolated_ingredients: Optional[str] = Field(None, description="Isolate ingredient listing text")
     profile_id: Optional[str] = Field(None, description="UUID of active dietary profile")
+    profile_name: Optional[str] = Field(None, description="Optional active profile display name")
+    active_profile_allergens: Optional[List[Any]] = Field(default_factory=list, description="Direct allergen constraints when profile_id is not specified")
     raw_lines: Optional[List[str]] = Field(default_factory=list, description="Raw line-by-line OCR segments")
     has_ingredient_keywords: Optional[bool] = Field(False, description="Whether ingredient headers were detected")
     client_metadata: Optional[dict[str, Any]] = Field(default_factory=dict, description="Device & preprocessing telemetry")

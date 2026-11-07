@@ -116,3 +116,23 @@ def test_analyze_endpoint_latency_benchmark(db_session: Session):
     res = analyze_food_label(request=req, background_tasks=BackgroundTasks(), db=db_session, current_user=None)
 
     assert res.processing_time_ms < 3000.0
+
+
+def test_analyze_endpoint_direct_profile_allergens_strings(db_session: Session):
+    """
+    Validates direct allergen array passing without a saved profile (e.g. guest mode or string list).
+    """
+    req = AnalyzeRequest(
+        ocr_text="Ingredients: whole milk powder, sugar, cocoa butter, soy lecithin.",
+        active_profile_allergens=["milk", "soy"],
+        profile_name="Direct Guest Profile",
+        has_ingredient_keywords=True,
+    )
+    res = analyze_food_label(request=req, background_tasks=BackgroundTasks(), db=db_session, current_user=None)
+
+    assert res.status == "success"
+    assert res.safety_verdict == "UNSAFE"
+    assert res.verdict_color == "red"
+    assert any(a.is_profile_conflict for a in res.matched_allergens)
+    assert res.profile_evaluated.profile_name == "Direct Guest Profile"
+    assert res.profile_evaluated.matched_conflicts_count >= 1

@@ -49,8 +49,8 @@ class BackendScanService:
         ingredient_tokens, additive_codes = nlp_pipeline.process(text_to_analyze)
 
         # 3. Retrieve Active Dietary Profile Constraints
-        profile_name = "Active Profile"
-        profile_allergens = []
+        profile_name = request.profile_name or "Active Profile"
+        profile_allergens = request.active_profile_allergens or []
         profile_uuid: Optional[uuid.UUID] = None
 
         if request.profile_id and db is not None:

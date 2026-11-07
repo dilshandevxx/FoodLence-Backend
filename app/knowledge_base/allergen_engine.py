@@ -217,16 +217,21 @@ class AllergenEngine:
         if profile_allergens is None:
             profile_allergens = []
 
-        # Map profile allergens by normalized code / name
+        # Map profile allergens by normalized code / name (supports both dict and string representations)
         user_allergen_map: Dict[str, str] = {}
         for item in profile_allergens:
-            code = item.get("allergen_id") or item.get("id") or item.get("allergen_code") or ""
-            name = item.get("name") or item.get("allergen_name") or ""
-            severity = item.get("severity") or "severe"
-            if code:
-                user_allergen_map[str(code).lower().strip()] = severity
-            if name:
-                user_allergen_map[str(name).lower().strip()] = severity
+            if isinstance(item, str):
+                clean_str = item.lower().strip()
+                if clean_str:
+                    user_allergen_map[clean_str] = "severe"
+            elif isinstance(item, dict):
+                code = item.get("allergen_id") or item.get("id") or item.get("allergen_code") or ""
+                name = item.get("name") or item.get("allergen_name") or ""
+                severity = item.get("severity") or "severe"
+                if code:
+                    user_allergen_map[str(code).lower().strip()] = str(severity).lower()
+                if name:
+                    user_allergen_map[str(name).lower().strip()] = str(severity).lower()
 
         conflicts: List[Dict[str, Any]] = []
         evaluated_allergens: List[Dict[str, Any]] = []
