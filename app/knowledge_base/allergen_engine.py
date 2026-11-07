@@ -147,21 +147,22 @@ class AllergenEngine:
             # 2. Match against Database if DB session is active
             if db is not None:
                 try:
-                    db_ing = db.query(Ingredient).filter(
-                        Ingredient.standard_name.ilike(f"%{ing_lower}%")
-                    ).first()
-                    if db_ing and db_ing.allergen_mappings:
-                        for mapping in db_ing.allergen_mappings:
-                            key = (mapping.allergen.allergen_code, ing)
-                            if key not in seen_keys:
-                                seen_keys.add(key)
-                                matches.append({
-                                    "allergen_code": mapping.allergen.allergen_code,
-                                    "allergen_name": mapping.allergen.allergen_name,
-                                    "severity_default": mapping.allergen.severity_default,
-                                    "cross_reactivity": mapping.cross_reactivity_risk,
-                                    "matched_ingredient": ing,
-                                })
+                    db_ings = db.query(Ingredient).all()
+                    for db_ing in db_ings:
+                        std_name = db_ing.standard_name.lower().strip()
+                        if std_name in ing_lower or ing_lower in std_name:
+                            if db_ing.allergen_mappings:
+                                for mapping in db_ing.allergen_mappings:
+                                    key = (mapping.allergen.allergen_code, ing)
+                                    if key not in seen_keys:
+                                        seen_keys.add(key)
+                                        matches.append({
+                                            "allergen_code": mapping.allergen.allergen_code,
+                                            "allergen_name": mapping.allergen.allergen_name,
+                                            "severity_default": mapping.allergen.severity_default,
+                                            "cross_reactivity": mapping.cross_reactivity_risk,
+                                            "matched_ingredient": ing,
+                                        })
                 except Exception:
                     pass
 

@@ -53,8 +53,29 @@ class NLPPipeline:
         if not cleaned:
             return []
 
-        # Split top-level by comma, semicolon, bullet
-        raw_chunks = re.split(r"[,;•\n]+", cleaned)
+        # Split top-level by comma, semicolon, bullet, newline NOT inside brackets/parentheses
+        raw_chunks = []
+        current: List[str] = []
+        depth = 0
+        for char in cleaned:
+            if char in "([":
+                depth += 1
+                current.append(char)
+            elif char in ")]":
+                if depth > 0:
+                    depth -= 1
+                current.append(char)
+            elif char in ",;•\n" and depth == 0:
+                c = "".join(current).strip()
+                if c:
+                    raw_chunks.append(c)
+                current = []
+            else:
+                current.append(char)
+        last_c = "".join(current).strip()
+        if last_c:
+            raw_chunks.append(last_c)
+
         ingredients: List[str] = []
 
         for chunk in raw_chunks:
@@ -62,22 +83,29 @@ class NLPPipeline:
             if not chunk or len(chunk) < 2:
                 continue
 
-            # Strip percentages: e.g. "salt (0.5%)" -> "salt"
-            chunk_no_pct = re.sub(r"\(\s*\d+(\.\d+)?%\s*\)", "", chunk).strip()
+            # Strip percentage annotations: e.g. "salt (0.5%)" or "[40%]"
+            chunk = re.sub(r"[\(\[]\s*\d+(?:\.\d+)?\s*%\s*[\)\]]", "", chunk).strip()
 
-            # Check for nested sub-ingredients in parentheses: e.g. "whey (milk)"
-            nested_match = re.search(r"^(.*?)\((.*?)\)$", chunk_no_pct)
-            if nested_match:
-                parent = nested_match.group(1).strip()
-                children = [c.strip() for c in nested_match.group(2).split(",") if c.strip()]
-                if parent:
-                    ingredients.append(parent)
-                ingredients.extend(children)
-            else:
-                # Strip dangling brackets if any
-                clean_chunk = re.sub(r"[\(\)\[\]\{\}]", "", chunk_no_pct).strip()
-                if clean_chunk and len(clean_chunk) > 1:
-                    ingredients.append(clean_chunk)
+            # Extract contents inside inner brackets/parentheses (up to 3 levels deep)
+            temp_chunk = chunk
+            for _ in range(3):
+                sub_matches = re.findall(r"[\(\[]([^\(\)\[\]]+)[\)\]]", temp_chunk)
+                if not sub_matches:
+                    break
+                for sub in sub_matches:
+                    for sub_item in re.split(r"[,;]+", sub):
+                        cleaned_sub = sub_item.strip()
+                        if cleaned_sub and len(cleaned_sub) > 1:
+                            ingredients.append(cleaned_sub)
+                new_temp = re.sub(r"[\(\[][^\(\)\[\]]*[\)\]]", "", temp_chunk)
+                if new_temp == temp_chunk:
+                    break
+                temp_chunk = new_temp
+
+            # Add main parent ingredient
+            clean_parent = re.sub(r"[\(\)\[\]\{\}]", "", temp_chunk).strip()
+            if clean_parent and len(clean_parent) > 1:
+                ingredients.append(clean_parent)
 
         # Deduplicate while preserving order
         seen = set()
@@ -87,6 +115,8 @@ class NLPPipeline:
             if norm not in seen:
                 seen.add(norm)
                 deduped.append(item)
+
+        return deduped
 
         return deduped
 

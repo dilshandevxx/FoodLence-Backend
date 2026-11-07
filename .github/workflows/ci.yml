@@ -1,0 +1,75 @@
+name: FoodLence Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - dilshan
+    paths:
+      - 'FoodLence-BackEnd/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches:
+      - main
+      - dilshan
+    paths:
+      - 'FoodLence-BackEnd/**'
+
+jobs:
+  test:
+    name: Backend Test Suite & Security Validation
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: FoodLence-BackEnd
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: foodlence_user
+          POSTGRES_PASSWORD: foodlence_password
+          POSTGRES_DB: foodlence_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12 Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx locust
+
+      - name: Run Database Migrations (Dry-run Validation)
+        env:
+          DATABASE_URL: postgresql://foodlence_user:foodlence_password@localhost:5432/foodlence_db
+          JWT_SECRET_KEY: ci_cd_pipeline_secret_key_12345
+        run: |
+          alembic upgrade head
+
+      - name: Execute Pytest Automated Test Suite
+        env:
+          DATABASE_URL: sqlite:///:memory:
+          JWT_SECRET_KEY: ci_cd_pipeline_secret_key_12345
+          ENVIRONMENT: testing
+        run: |
+          pytest tests/ -v --tb=short
+
+      - name: Verify Dockerfile Build
+        run: |
+          docker build -t foodlence-backend:ci .
