@@ -15,6 +15,11 @@ passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.9
 
 # NLP & Machine Learning
+torch>=2.2.0
+transformers>=4.38.0
+datasets>=2.18.0
+accelerate>=0.28.0
+evaluate>=0.4.1
 spacy>=3.7.4
 scikit-learn>=1.4.1.post1
 rapidfuzz>=3.6.2

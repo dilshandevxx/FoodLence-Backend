@@ -60,3 +60,21 @@ ml/data/annotated/*
 ml/data/test/*
 !ml/data/test/.gitkeep
 *.log
+
+# FoodLence generated ML datasets
+/ml/data/foodlence_generated/
+
+# Generated FoodLence datasets
+/ml/data/foodlence_generated_v2/
+/ml/data/foodlence_generated_v3/
+/ml/data/foodlence_fresh/output/
+/ml/data/foodlence_generated_v4/
+/ml/data/augmented/
+
+# Local dataset inspection reports
+/ml/data/foodlence_inspection.json
+/ml/data/foodlence_source_profile.json
+
+# Large local source datasets
+/ml/data/raw/openfoodfacts_filtered.csv
+/ml/data/raw/allergies_10k.csv
