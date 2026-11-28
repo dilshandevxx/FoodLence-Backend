@@ -68,6 +68,8 @@ ml/data/test/*
 /ml/data/foodlence_generated_v2/
 /ml/data/foodlence_generated_v3/
 /ml/data/foodlence_fresh/output/
+/ml/data/foodlence_generated_v4/
+/ml/data/augmented/
 
 # Local dataset inspection reports
 /ml/data/foodlence_inspection.json
